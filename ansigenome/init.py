@@ -3,9 +3,9 @@ import sys
 
 from datetime import date
 
-import constants as c
-import ui as ui
-import utils as utils
+from . import constants as c
+from . import ui as ui
+from . import utils as utils
 
 
 default_mainyml_template = """---
@@ -123,7 +123,7 @@ class Init(object):
         testyml_template = testyml_template.replace(
             "%year", str(date.today().year))
         testyml_template = testyml_template.replace(
-            "%author", self.config["author_name"])
+            "%author", self.config["author_name"].decode("utf-8"))
         testyml_template = testyml_template.replace(
             "%email", self.config["author_email"])
 
@@ -141,4 +141,4 @@ class Init(object):
         test_file = os.path.join(self.output_path, "tests", "test")
         utils.string_to_file(test_file, testyml_template)
 
-        os.chmod(test_file, 0755)
+        os.chmod(test_file, 0o755)

@@ -1,8 +1,8 @@
 import os
 
-import constants as c
-import ui as ui
-import utils as utils
+from . import constants as c
+from . import ui as ui
+from . import utils as utils
 
 
 class Run(object):

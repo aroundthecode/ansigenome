@@ -6,19 +6,20 @@ import json
 import os
 import re
 import subprocess
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import yaml
 #  import collections
 
 from jinja2 import DictLoader
 from jinja2.environment import Environment
 
-import constants as c
-import ui as ui
+from . import constants as c
+from . import ui as ui
 
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+# import imp
+# imp.reload(sys)
+#sys.setdefaultencoding('utf-8')
 
 
 class RelEnvironment(Environment):
@@ -94,8 +95,8 @@ def url_to_string(url):
     Return the contents of a web site url as a string.
     """
     try:
-        page = urllib2.urlopen(url)
-    except (urllib2.HTTPError, urllib2.URLError) as err:
+        page = urllib.request.urlopen(url)
+    except (urllib.error.HTTPError, urllib.error.URLError) as err:
         ui.error(c.MESSAGES["url_unreachable"], err)
         sys.exit(1)
 
@@ -134,7 +135,7 @@ def template(path, extend_path, out):
         # DEPRECATION WARNING: This is only used for backwards compatibility,
         #                      please use the unique filter instead.
         def unique_dict(items, key):
-            return {v[key]: v for v in items}.values()
+            return list({v[key]: v for v in items}.values())
 
         env.filters["unique_dict"] = unique_dict
 
@@ -194,7 +195,7 @@ def exit_if_path_not_found(path):
 
 
 def ask(question, default):
-    result = raw_input("{0} [{1}]: ".format(question, default))
+    result = input("{0} [{1}]: ".format(question, default))
 
     if not result:
         result = default
@@ -259,7 +260,7 @@ def keys_in_dict(d, parent_key, keys):
     """
     Create a list of keys from a dict recursively.
     """
-    for key, value in d.iteritems():
+    for key, value in d.items():
         if isinstance(value, dict):
             keys_in_dict(value, key, keys)
         else:
@@ -317,7 +318,7 @@ def roles_dict(path, repo_prefix="", repo_sub_dir=""):
 
     aggregated_roles = {}
 
-    roles = os.walk(path).next()[1]
+    roles = os.walk(path).__next__()[1]
 
     # First scan all directories
     for role in roles:
@@ -328,7 +329,7 @@ def roles_dict(path, repo_prefix="", repo_sub_dir=""):
     # Then format them
     for role in roles:
         if is_role(os.path.join(path, role)):
-            if isinstance(role, basestring):
+            if isinstance(role, str):
                 role_repo = "{0}{1}".format(repo_prefix, role_name(role))
 
                 aggregated_roles[role] = role_repo
@@ -374,10 +375,10 @@ def normalize_role(role, config):
     Normalize a role name.
     """
     if role.startswith(config["scm_repo_prefix"]):
-        role_name = role.replace(config["scm_repo_prefix"], "")
+        role_name = role.replace(config["scm_repo_prefix"].decode("utf-8"), "")
     else:
         if "." in role:
-            galaxy_prefix = "{0}.".format(config["scm_user"])
+            galaxy_prefix = "{0}.".format(config["scm_user"].decode("utf-8"))
             role_name = role.replace(galaxy_prefix, "")
         elif "-" in role:
             role_name = role.replace("-", "_")
@@ -391,10 +392,8 @@ def create_meta_main(create_path, config, role, categories):
     """
     Create a meta template.
     """
-    meta_file = c.DEFAULT_META_FILE.replace(
-        "%author_name", config["author_name"])
-    meta_file = meta_file.replace(
-        "%author_company", config["author_company"])
+    meta_file = c.DEFAULT_META_FILE.replace("%author_name", config["author_name"].decode("utf-8"))
+    meta_file = meta_file.replace( "%author_company", config["author_company"] )
     meta_file = meta_file.replace("%license_type", config["license_type"])
     meta_file = meta_file.replace("%role_name", role)
 
